@@ -5,7 +5,7 @@ ifndef TIMEZONE
 endif
 
 ifndef KIMAI_VERSION
-  KIMAI_VERSION := master
+  KIMAI_VERSION := main
 endif
 
 ZAP := $(shell echo $(KIMAI_VERSION) | egrep -q "[0-9].[0-9]+" && echo matched)
@@ -57,6 +57,18 @@ test: clean-test
 	docker run --rm --network kimai-test --name kimai-test-fpm-${KIMAI_VERSION}-dev     -ti -e DATABASE_URL=mysql://kimai:kimai@kimai-mysql-testing:3306/kimai --entrypoint /self-test.sh kimai/kimai2:fpm-${KIMAI_VERSION}-dev
 	docker run --rm --network kimai-test --name kimai-test-apache-${KIMAI_VERSION}-prod -ti -e DATABASE_URL=mysql://kimai:kimai@kimai-mysql-testing:3306/kimai --entrypoint /self-test.sh kimai/kimai2:apache-${KIMAI_VERSION}-prod
 	docker run --rm --network kimai-test --name kimai-test-apache-${KIMAI_VERSION}-dev  -ti -e DATABASE_URL=mysql://kimai:kimai@kimai-mysql-testing:3306/kimai --entrypoint /self-test.sh kimai/kimai2:apache-${KIMAI_VERSION}-dev
+
+pull:
+	docker pull kimai/kimai2:fpm-dev
+	docker pull kimai/kimai2:apache-dev
+	docker pull kimai/kimai2:apache-latest
+	docker pull kimai/kimai2:fpm-prod
+
+show-versions: pull
+	docker run --entrypoint cat kimai/kimai2:apache-dev /opt/kimai/version.txt
+	docker run --entrypoint cat kimai/kimai2:apache-prod /opt/kimai/version.txt
+	docker run --entrypoint cat kimai/kimai2:fpm-dev /opt/kimai/version.txt
+	docker run --entrypoint cat kimai/kimai2:fpm-prod /opt/kimai/version.txt
 
 changelog_patch:
 	# npx standard-version --release-as 1.1.0

@@ -1,8 +1,8 @@
 # Kimai Dockers
 
-We provide a set of docker images for the [Kimai v2](https://github.com/kevinpapst/kimai2) project.
+We provide a set of docker images for the [Kimai](https://github.com/kimai/kimai) project.
 
-The built images are available from [Kimai v2](https://hub.docker.com/r/kimai/kimai2) at Docker Hub.
+The built images are available from [Kimai](https://hub.docker.com/r/kimai/kimai2) at Docker Hub.
 
 ## Deving and Contributing
 
@@ -36,7 +36,8 @@ Run the latest production build:
         docker run --rm --name kimai-test \
             -ti \
             -p 8001:8001 \
-            -e DATABASE_URL=mysql://kimai:kimai@${HOSTNAME}:3399/kimai \
+            -e DATABASE_URL=mysql://kimai:kimai@host.docker.internal:3399/kimai?charset=utf8&serverVersion=5.7 \
+            --add-host=host.docker.internal:host-gateway \
             kimai/kimai2:apache
     ```
 
@@ -44,7 +45,8 @@ Run the latest production build:
 
     ```bash
         docker exec -ti kimai-test \
-            /opt/kimai/bin/console kimai:create-user admin admin@example.com ROLE_SUPER_ADMIN
+            /opt/kimai/bin/console \
+            kimai:user:create admin admin@example.com ROLE_SUPER_ADMIN
     ```
 
 Now, you can access the Kimai instance at <http://localhost:8001>.

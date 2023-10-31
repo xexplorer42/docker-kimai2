@@ -69,6 +69,7 @@ RUN apk add --no-cache \
     libpng-dev \
     icu \
     icu-dev \
+    icu-data-full \
     # ldap
     openldap-dev \
     libldap \
@@ -120,7 +121,7 @@ RUN docker-php-ext-install -j$(nproc) xsl
 # php extension redis
 FROM ${BASE}-php-ext-base AS php-ext-redis
 RUN yes no | pecl install redis && \
-    docker-php-ext-enable redis 
+    docker-php-ext-enable redis
 
 # php extension opcache
 FROM ${BASE}-php-ext-base AS php-ext-opcache
@@ -140,6 +141,7 @@ RUN apk add --no-cache \
         freetype \
         haveged \
         icu \
+        icu-data-full \
         libldap \
         libpng \
         libzip \
@@ -207,6 +209,7 @@ RUN ln -snf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime && echo ${TIMEZONE} >
 
 # copy startup script & DB checking script
 COPY assets/startup.sh /startup.sh
+COPY assets/service.sh /service.sh
 COPY assets/self-test.sh /self-test.sh
 COPY assets/dbtest.php /dbtest.php
 
@@ -257,10 +260,12 @@ ENV COMPOSER_MEMORY_LIMIT=-1
 # If this set then the image will start, run a self test and then exit. It's used for the release process
 ENV TEST_AND_EXIT=
 ENV COMPOSER_ALLOW_SUPERUSER=1
+ENV USER_ID=
+ENV GROUP_ID=
 
 VOLUME [ "/opt/kimai/var" ]
 
-ENTRYPOINT /startup.sh
+CMD [ "/startup.sh" ]
 
 
 
@@ -292,8 +297,7 @@ RUN \
     /opt/kimai/bin/console kimai:version | awk '{print $2}' > /opt/kimai/version.txt
 ENV APP_ENV=dev
 ENV DATABASE_URL=
-ENV memory_limit=256
-USER www-data
+ENV memory_limit=256M
 
 # production build
 FROM base AS prod
@@ -308,6 +312,12 @@ RUN \
     composer --no-ansi require --working-dir=/opt/kimai laminas/laminas-ldap && \
     cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini && \
     sed -i "s/expose_php = On/expose_php = Off/g" /usr/local/etc/php/php.ini && \
+    sed -i "s/;opcache.enable=1/opcache.enable=1/g" /usr/local/etc/php/php.ini && \
+    sed -i "s/;opcache.memory_consumption=128/opcache.memory_consumption=256/g" /usr/local/etc/php/php.ini && \
+    sed -i "s/;opcache.interned_strings_buffer=8/opcache.interned_strings_buffer=24/g" /usr/local/etc/php/php.ini && \
+    sed -i "s/;opcache.max_accelerated_files=10000/opcache.max_accelerated_files=100000/g" /usr/local/etc/php/php.ini && \
+    sed -i "s/opcache.validate_timestamps=1/opcache.validate_timestamps=0/g" /usr/local/etc/php/php.ini && \
+    sed -i "s/session.gc_maxlifetime = 1440/session.gc_maxlifetime = 604800/g" /usr/local/etc/php/php.ini && \
     mkdir -p /opt/kimai/var/logs && chmod 777 /opt/kimai/var/logs && \
     sed "s/128M/-1/g" /usr/local/etc/php/php.ini-development > /opt/kimai/php-cli.ini && \
     wget https://github.com/kevinpapst/ImportBundle/archive/refs/tags/2.5.0.tar.gz -O /var/tmp/ImportBundle.tar.gz && \
@@ -318,5 +328,4 @@ RUN \
     /opt/kimai/bin/console kimai:version | awk '{print $2}' > /opt/kimai/version.txt
 ENV APP_ENV=prod
 ENV DATABASE_URL=
-ENV memory_limit=128
-USER www-data
+ENV memory_limit=256M
