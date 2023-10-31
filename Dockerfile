@@ -64,17 +64,17 @@ RUN apk add --no-cache \
     musl-dev \
     perl \
     re2c \
-    # gd
+    gd \
     freetype-dev \
     libpng-dev \
-    # icu
+    icu \
     icu-dev \
     # ldap
     openldap-dev \
     libldap \
-    # zip
+    zip \
     libzip-dev \
-    # xsl
+    #xsl 
     libxslt-dev
 
 
@@ -281,6 +281,9 @@ RUN \
     composer --no-ansi clearcache && \
     composer --no-ansi require --working-dir=/opt/kimai laminas/laminas-ldap && \
     cp /usr/local/etc/php/php.ini-development /usr/local/etc/php/php.ini && \
+    wget https://github.com/kevinpapst/ImportBundle/archive/refs/tags/2.5.0.tar.gz -O /var/tmp/ImportBundle.tar.gz && \
+    tar -xzvf /var/tmp/ImportBundle.tar.gz -C /opt/kimai/var/plugins/ && \
+    mv /opt/kimai/var/plugins/ImportBundle-* /opt/kimai/var/plugins/ImportBundle && \
     chown -R www-data:www-data /opt/kimai /usr/local/etc/php/php.ini && \
     mkdir -p /opt/kimai/var/logs && chmod 777 /opt/kimai/var/logs && \
     sed "s/128M/-1/g" /usr/local/etc/php/php.ini-development > /opt/kimai/php-cli.ini && \
@@ -307,6 +310,9 @@ RUN \
     sed -i "s/expose_php = On/expose_php = Off/g" /usr/local/etc/php/php.ini && \
     mkdir -p /opt/kimai/var/logs && chmod 777 /opt/kimai/var/logs && \
     sed "s/128M/-1/g" /usr/local/etc/php/php.ini-development > /opt/kimai/php-cli.ini && \
+    wget https://github.com/kevinpapst/ImportBundle/archive/refs/tags/2.5.0.tar.gz -O /var/tmp/ImportBundle.tar.gz && \
+    tar -xzvf /var/tmp/ImportBundle.tar.gz -C /opt/kimai/var/plugins/ && \
+    mv /opt/kimai/var/plugins/ImportBundle-* /opt/kimai/var/plugins/ImportBundle && \
     chown -R www-data:www-data /opt/kimai /usr/local/etc/php/php.ini && \
     tar -C /opt/kimai -zcvf /var/tmp/public.tgz public && \
     /opt/kimai/bin/console kimai:version | awk '{print $2}' > /opt/kimai/version.txt
